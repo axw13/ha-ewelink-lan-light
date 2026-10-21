@@ -22,7 +22,7 @@ dump. They describe the test hardware; this repository does not contain the dump
 | PWM channels | Five: red, green, blue, cold white, warm white |
 | Internal light type | `light_ck0205pwm` |
 | LAN control | HTTP on TCP **8081** |
-| State announcements | mDNS service `_ewelink._tcp.local.`; mDNS transport uses UDP 5353 |
+| State | Encrypted TXT record of mDNS service `_ewelink._tcp.local.` (UDP 5353): multicast announcements, plus a unicast query every 10 s |
 | LAN encryption | AES-128-CBC with a key derived as MD5(device key) |
 
 The five PWM channels describe the bulb hardware, not five separately exposed
@@ -35,7 +35,10 @@ each bulb. The local pairing/provisioning test scope is documented in the
 Home Assistant Core 2026.10.1 or later. This version uses Core's probatio-based
 entity-service helper. Compatibility with future Core releases is not guaranteed.
 The integration installs its declared pycryptodome dependency through HA.
-HA must reach the bulb's LAN HTTP endpoint and receive its mDNS announcements.
+HA must reach the bulb's LAN HTTP endpoint (TCP 8081) and UDP 5353 on the bulb. State is
+polled every 10 s with a unicast mDNS query, so it also works across VLANs without an mDNS
+repeater; multicast announcements, when they arrive, update it instantly. After 3 missed
+polls the light shows as unavailable. The bulb's firmware version appears in its device info.
 
 ## Retrieve the bulb ID and key
 

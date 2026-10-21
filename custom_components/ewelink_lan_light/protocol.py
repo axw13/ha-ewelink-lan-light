@@ -16,6 +16,7 @@ import hashlib
 import http.client
 import json
 import random
+import struct
 import time
 import urllib.request
 from typing import Mapping
@@ -113,3 +114,39 @@ def check_credentials(ip: str, deviceid: str, devicekey: str, timeout: float = 5
         except http.client.RemoteDisconnected:
             time.sleep(0.4 * (attempt + 1))
     return False
+
+
+MDNS_PORT = 5353
+
+
+def build_txt_query(deviceid: str) -> bytes:
+    """A unicast mDNS question for the bulb's TXT record, which carries its state.
+
+    Sent straight to the bulb's port 5353 from an ordinary source port, so it
+    is routed like any unicast packet (works across VLANs, no repeater).
+    """
+    name = f"eWeLink_{deviceid}._ewelink._tcp.local"
+    qname = b"".join(bytes([len(label)]) + label.encode() for label in name.split(".")) + b"\0"
+    header = struct.pack(">HHHHHH", random.randint(1, 0xFFFF), 0, 1, 0, 0, 0)
+    return header + qname + struct.pack(">HH", 16, 1)  # TXT, IN
+
+
+def txt_props_from_response(data: bytes) -> dict[bytes, bytes] | None:
+    """Pull the TXT key/value pairs out of an mDNS reply; None if there are none."""
+    from zeroconf import DNSIncoming, DNSText
+
+    try:
+        answers = DNSIncoming(data).answers()
+    except Exception:  # malformed or unrelated packet
+        return None
+    for rec in answers:
+        if isinstance(rec, DNSText):
+            props: dict[bytes, bytes] = {}
+            raw, i = rec.text, 0
+            while i < len(raw):
+                n = raw[i]
+                key, _, value = raw[i + 1 : i + 1 + n].partition(b"=")
+                props[key] = value
+                i += 1 + n
+            return props
+    return None

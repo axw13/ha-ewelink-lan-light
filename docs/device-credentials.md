@@ -104,7 +104,7 @@ mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods
    open **Settings → Devices & services → Add integration → eWeLink LAN
    Light (no cloud)** and enter a name, that LAN address, the device ID and key.
    Repeat separately for every bulb. HA must be able to reach the bulb's
-   LAN endpoint on TCP port 8081; mDNS is used for pushed state updates.
+   LAN endpoint on TCP port 8081 and UDP 5353 (state is read with a unicast mDNS query every 10 s).
 
 ## What was actually tested
 

@@ -1,9 +1,11 @@
 """Light entity: on/off, brightness, color temperature and RGB over the LAN.
 
 Commands:  /zeroconf/switch (on/off) and /zeroconf/dimmable (everything else).
-State:     decoded from the bulb's own mDNS broadcasts when they reach Home
-           Assistant (so changes made from the phone app show up); until the
-           first broadcast arrives the entity reports assumed state.
+State:     the bulb's own encrypted mDNS record, received from its multicast
+           announcements and from a unicast query every few seconds (so
+           changes made by the app, BLE or anything else are picked up, even
+           across VLANs). Until the first reading arrives the entity reports
+           assumed state.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DEVICEID, DOMAIN
@@ -79,11 +82,22 @@ class EweLinkLanLight(LightEntity):
     def assumed_state(self) -> bool:
         return not self._device.push_state_seen
 
+    @property
+    def available(self) -> bool:
+        return self._device.available
+
     async def async_added_to_hass(self) -> None:
-        self.async_on_remove(self._device.add_listener(self._handle_state))
+        self.async_on_remove(self._device.add_listener(self._handle_update))
+        if self._device.state is not None:
+            self._handle_update()
 
     @callback
-    def _handle_state(self, state: dict) -> None:
+    def _handle_update(self) -> None:
+        state = self._device.state
+        if state is None:
+            self.async_write_ha_state()
+            return
+        self._record_firmware(state.get("fwVersion"))
         self._attr_is_on = state.get("switch") == "on"
         # While off the bulb always reports ltype "white"; keep the last mode.
         if self._attr_is_on:
@@ -99,6 +113,15 @@ class EweLinkLanLight(LightEntity):
                 self._attr_color_temp_kelvin = ct_to_kelvin(w.get("ct", 50))
                 self._attr_brightness = br_to_ha(w.get("br", 100))
         self.async_write_ha_state()
+
+    @callback
+    def _record_firmware(self, version: str | None) -> None:
+        if not version or not self.registry_entry or not self.registry_entry.device_id:
+            return
+        registry = dr.async_get(self.hass)
+        device = registry.async_get(self.registry_entry.device_id)
+        if device and device.sw_version != version:
+            registry.async_update_device(device.id, sw_version=version)
 
     def _dimmable_payload(self) -> dict:
         br = ha_to_br(self._attr_brightness)
