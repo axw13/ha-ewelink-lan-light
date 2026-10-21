@@ -47,16 +47,23 @@ prove Wi-Fi joined), reservations and entering the values in HA. Existing
 working entries do not need to be reset or paired again.
 All credential examples are placeholders.
 
-## Installation from this private repository
+## Installation with HACS
 
-HACS and the Home Assistant Marketplace only consume public repositories. This
-repository is deliberately private; adding its URL there will not install it.
-The directory layout and metadata follow their integration packaging convention,
-so the same files can be used there if visibility is explicitly changed later.
-Do not change visibility without a fresh security review and owner approval.
+1. Open **HACS → menu (three dots) → Custom repositories**.
+2. Add `https://github.com/axw13/ha-ewelink-lan-light` with type **Integration**.
+3. Find **eWeLink LAN Light** in HACS and download it. Back up an existing
+   installation before replacing its files.
+4. Run HA's configuration check and restart Core.
+5. Open **Settings → Devices & services → Add integration → eWeLink LAN Light
+   (no cloud)** and enter the bulb's normal LAN address, device ID and device key.
 
-1. Download the source archive from a tagged release while signed into GitHub,
-   or clone this repository using your own authenticated GitHub session.
+This is a custom repository, not a claim of inclusion in the default catalog.
+See the [HACS custom-repository instructions](https://www.hacs.dev/docs/faq/custom_repositories/).
+Compatibility with future Marketplace versions has not been tested.
+
+## Manual installation
+
+1. Download the source archive from a tagged release or clone this repository.
 2. Back up the installed integration, then copy the entire
    `custom_components/ewelink_lan_light` directory into HA's
    `/config/custom_components/`. Do not copy personal configuration into this repo.
@@ -89,13 +96,6 @@ They send no network requests and do not operate physical devices. Compile check
 and packaging/privacy review are also recommended before releases. These tests
 do not replace a real HA configuration check and a controlled hardware test.
 Back up before upgrading; retain this action while automations reference it.
-
-## Privacy
-
-This repository contains integration source, synthetic unit tests and generic
-documentation only. It contains no personal automation/dashboard exports, HA
-storage files, live device IDs/keys, passwords, access tokens or network inventory.
-Do not upload logs or diagnostics without reviewing and redacting them first.
 
 Packaging references:
 - https://www.hacs.dev/docs/publish/integration/
