@@ -1,0 +1,29 @@
+prepare_color:
+  name: Prepare colour without power-on
+  description: Prepare RGB colour or white temperature and brightness without a power command.
+  target:
+    entity:
+      integration: ewelink_lan_light
+      domain: light
+  fields:
+    rgb_color:
+      name: RGB colour
+      required: false
+      selector:
+        color_rgb:
+    brightness_pct:
+      name: Brightness
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    color_temp_kelvin:
+      name: White colour temperature
+      required: false
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          unit_of_measurement: K

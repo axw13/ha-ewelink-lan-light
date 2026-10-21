@@ -1,0 +1,19 @@
+{
+  "domain": "ewelink_lan_light",
+  "name": "eWeLink LAN Light (no cloud)",
+  "codeowners": [
+    "@axw13"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "zeroconf"
+  ],
+  "documentation": "https://github.com/axw13/ha-ewelink-lan-light",
+  "issue_tracker": "https://github.com/axw13/ha-ewelink-lan-light/issues",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": [
+    "pycryptodome>=3.18.0"
+  ],
+  "version": "0.3.0"
+}

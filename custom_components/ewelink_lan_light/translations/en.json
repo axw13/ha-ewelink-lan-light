@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an eWeLink bulb",
+        "description": "Enter the bulb's LAN address and the device ID and key read from its pairing access point (GET http://<bulb-pairing-address>/device). Nothing is sent to the cloud.",
+        "data": {
+          "name": "Name",
+          "host": "IP address",
+          "deviceid": "Device ID",
+          "devicekey": "Device key (apikey)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the bulb on port 8081. Check the IP address and that Home Assistant can route to it.",
+      "invalid_auth": "The bulb answered but rejected the device ID or key.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This bulb is already configured."
+    }
+  }
+}
