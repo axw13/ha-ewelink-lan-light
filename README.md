@@ -2,8 +2,33 @@
 
 A Home Assistant custom integration for local control of compatible eWeLink RGB
 bulbs, without a cloud account. Includes RGB, 2000–6500 K white, brightness,
-on/off and an optional colour-before-power action. The current implementation was
-exercised on BL602 CK0205PWM bulbs; compatibility with other models is unverified.
+on/off and an optional colour-before-power action. The tested hardware and
+firmware are listed below; compatibility with other models is unverified.
+
+## Tested model
+
+These details were supplied by the operator from the tested bulb and its firmware
+dump. They describe the test hardware; this repository does not contain the dump.
+
+| Item | Value |
+| --- | --- |
+| Product | eWeLink Smart GU10 RGB+CCT bulb (RGB plus tunable white) |
+| Wi-Fi module / board | BW2L |
+| Chip | Bouffalo Lab BL602 (RISC-V, 2.4 GHz Wi-Fi) |
+| Flash | 2 MiB (2,097,152-byte dump) |
+| Crystal | 40 MHz, marked LK40 |
+| Firmware | `FWLED-CK0205PWM-LIGHT-BL602L`, version **1.7.1** |
+| Factory model string | `CK-BL602-5PWM-01` |
+| PWM channels | Five: red, green, blue, cold white, warm white |
+| Internal light type | `light_ck0205pwm` |
+| LAN control | HTTP on TCP **8081** |
+| State announcements | mDNS service `_ewelink._tcp.local.`; mDNS transport uses UDP 5353 |
+| LAN encryption | AES-128-CBC with a key derived as MD5(device key) |
+
+The five PWM channels describe the bulb hardware, not five separately exposed
+HA entities. The integration exposes RGB and colour-temperature controls for
+each bulb. The local pairing/provisioning test scope is documented in the
+[credential guide](docs/device-credentials.md#what-was-actually-tested).
 
 ## Requirements
 

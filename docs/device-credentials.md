@@ -146,7 +146,10 @@ The [SonoffLAN maintainer's manual device-key instructions](https://github.com/A
 document the setup-network `/device` route and the mapping from `apikey` to
 `devicekey`. That supports the retrieval method; it is not a compatibility
 guarantee for every bulb. This repository's implementation has been exercised
-on BL602 CK0205PWM bulbs. The detailed `/ap` recipe and observations above come
+on the **eWeLink Smart GU10 RGB+CCT, BW2L / BL602**, running
+**FWLED-CK0205PWM-LIGHT-BL602L 1.7.1** (factory model `CK-BL602-5PWM-01`,
+internal type `light_ck0205pwm`). See the [tested-model table](../README.md#tested-model)
+for the operator-reported hardware details. The detailed `/ap` recipe and observations above come
 from the operator's test report; the referenced manual key-retrieval guide does
 not establish that provisioning recipe. Check your product manual before
 entering pairing mode.
