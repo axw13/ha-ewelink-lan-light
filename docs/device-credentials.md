@@ -46,7 +46,11 @@ mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods
    Run this locally on the computer connected to the bulb:
 
    ```sh
-   curl http://10.10.7.1/device -H 'Package-Name: com.coolkit'
+   curl -v http://10.10.7.1/device \
+     -H "Accept: application/json" \
+     -H "Content-Type: application/json;charset=UTF-8" \
+     -H "Package-Name: com.coolkit" \
+     -H "Cache-Control: no-store"
    ```
 
    The tested response has these fields. All values below are placeholders:
@@ -67,7 +71,11 @@ mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods
    was tested on one bulb as an alternative to account-based app provisioning:
 
    ```sh
-   curl http://10.10.7.1/ap -H 'Package-Name: com.coolkit' \
+   curl -v http://10.10.7.1/ap \
+     -H "Accept: application/json" \
+     -H "Content-Type: application/json;charset=UTF-8" \
+     -H "Package-Name: com.coolkit" \
+     -H "Cache-Control: no-store" \
      -d '{"ssid":"YOUR_SSID","password":"YOUR_PASSWORD","serverName":"cn-disp.coolkit.invalid","port":8080}'
    ```
 
@@ -77,6 +85,8 @@ mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods
    embedded double quotes/backslashes must still be escaped correctly in JSON.
    The completed command contains your Wi-Fi password: keep it out of shell
    history, logs, shared terminal recordings and Git.
+   `-v` adds connection/request diagnostics; the response still contains private
+   device credentials. Keep the terminal output private too.
 
    The `.invalid` name deliberately cannot resolve in normal DNS, preventing
    registration through that configured cloud endpoint. On the tested bulb it
