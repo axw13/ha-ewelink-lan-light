@@ -12,6 +12,14 @@ entity-service helper. Compatibility with future Core releases is not guaranteed
 The integration installs its declared pycryptodome dependency through HA.
 HA must reach the bulb's LAN HTTP endpoint and receive its mDNS announcements.
 
+## Retrieve the bulb ID and key
+
+Follow [Retrieve a bulb's device ID, key and LAN address](docs/device-credentials.md).
+It covers AP pairing, the local `/device` endpoint, `deviceid`/`apikey` mapping,
+returning the bulb to normal Wi-Fi, finding its LAN address and entering the
+values in HA. Existing working entries do not need to be reset or paired again.
+All credential examples are placeholders.
+
 ## Installation from this private repository
 
 HACS and the Home Assistant Marketplace only consume public repositories. This
