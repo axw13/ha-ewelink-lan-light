@@ -12,6 +12,10 @@ The device key is separate from your Wi-Fi password, eWeLink account password,
 HA access token and the protocol's fixed `selfApikey` value. None of those
 substitutes for it. Each bulb has its own credentials.
 
+LAN commands are AES-encrypted using a key derived from the device key. The
+pairing API exposes the ID and key locally on the tested firmware; retrieving
+them does not require a cloud login or capturing network traffic.
+
 ## Existing working bulbs
 
 An existing HA entry already has the ID and key. Updating this integration does
@@ -25,47 +29,85 @@ This is the local `/device` method referenced by this integration's setup code.
 It applies only to firmware that exposes that endpoint in compatible/AP pairing
 mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods.
 
-1. Work on one bulb at a time. Follow **that model's manual** to enter
-   compatible/AP pairing mode. There is no universal power-cycle sequence;
-   quick/Bluetooth pairing alone may not expose a Wi-Fi access point.
-2. On your own phone or laptop, join the bulb's temporary setup Wi-Fi. Supported
-   eWeLink firmware commonly advertises a name beginning with `ITEAD-`.
-   The documented default password for that setup network is `12345678`;
-   use the device manual if it specifies another value. This is a manufacturer
-   setup default, not your home Wi-Fi password or a private repository secret.
-3. Stay connected when the operating system warns that the network has no
-   internet. If necessary, temporarily stop mobile-data switching or a VPN so
-   requests go to the bulb's Wi-Fi network.
-4. Open **`http://10.10.7.1/device`** in a browser connected to that network.
-   This is the documented factory setup address, not a home-network address.
-   If the model uses another setup address, consult its manual and the gateway
-   assigned by its access point. Use plain HTTP, not HTTPS.
-5. Read the returned JSON **locally**. The relevant fields look like this;
-   these values are deliberately placeholders, not working credentials:
+1. Work on one bulb at a time. Put it in compatible/AP pairing mode so it
+   broadcasts its own Wi-Fi instead of joining the home network. A previously
+   configured bulb may need a reset. **The exact reset sequence and the setup
+   SSID observed on this model were not recorded.** Follow the model's manual;
+   do not assume a generic power-cycle sequence or an `ITEAD-` network name.
+2. Connect your computer to the bulb's actual setup Wi-Fi, using the setup
+   password from its manual if needed. Losing internet while connected is
+   expected. Keep the connection despite the operating system's warning;
+   temporarily stop automatic network switching or a VPN if it interferes.
+   The tested setup gateway was **`10.10.7.1`**. This is a factory setup address,
+   not the bulb's eventual address on your home network. Your computer receives
+   an address from the bulb; do not assume a particular client address.
+3. **Read the ID and key before sending Wi-Fi configuration.** The setup network
+   disappears when the bulb joins yours, so collect the values in this window.
+   Run this locally on the computer connected to the bulb:
+
+   ```sh
+   curl http://10.10.7.1/device -H 'Package-Name: com.coolkit'
+   ```
+
+   The tested response has these fields. All values below are placeholders:
 
    ```json
    {
      "deviceid": "<your-bulb-device-id>",
-     "apikey": "<your-bulb-device-key>"
+     "apikey": "<your-bulb-device-key>",
+     "chipid": "<chip-id>",
+     "accept": "post"
    }
    ```
 
-   Field nesting can vary by firmware. Copy `deviceid` as the device ID and
-   `apikey` as the device key. A `chipid`, MAC address or Wi-Fi SSID is not the key.
-6. Save the two values in a password manager or your own secret store. Do not
-   commit the response, paste it into an issue, or publish screenshots of it.
-7. Exit setup and reconnect the bulb to its normal Wi-Fi using its supported
-   pairing procedure, normally through the eWeLink app. That provisioning step
-   is separate from this integration's subsequent local-only control. Return
-   your phone/laptop to its normal network afterward.
-8. Find the bulb's **normal LAN address** in the router's DHCP lease list.
-   Match its device details rather than guessing from another bulb. A DHCP
-   reservation helps keep the address stable. Do not enter the factory setup
-   address in HA as the bulb's normal host.
-9. In HA, open **Settings → Devices & services → Add integration → eWeLink LAN
+   Save `deviceid` and `apikey` in a password manager or your own secret store.
+   `apikey` is the HA device key; `chipid`, the MAC and the Wi-Fi SSID are not.
+   Do not commit the response or publish it in issues or screenshots.
+4. Provision the bulb onto your **2.4 GHz Wi-Fi**. The following local request
+   was tested on one bulb as an alternative to account-based app provisioning:
+
+   ```sh
+   curl http://10.10.7.1/ap -H 'Package-Name: com.coolkit' \
+     -d '{"ssid":"YOUR_SSID","password":"YOUR_PASSWORD","serverName":"cn-disp.coolkit.invalid","port":8080}'
+   ```
+
+   Replace only the SSID/password placeholders with your own values locally.
+   In a POSIX shell, outer single quotes prevent `$` and `!` from being expanded.
+   Credentials containing a single quote need different shell quoting, and
+   embedded double quotes/backslashes must still be escaped correctly in JSON.
+   The completed command contains your Wi-Fi password: keep it out of shell
+   history, logs, shared terminal recordings and Git.
+
+   The `.invalid` name deliberately cannot resolve in normal DNS, preventing
+   registration through that configured cloud endpoint. On the tested bulb it
+   joined Wi-Fi, accepted LAN commands and was observed without cloud contact.
+   This is a result for that bulb/firmware, not a universal network-isolation
+   guarantee. The integration itself does not make cloud requests.
+5. **Verify that the bulb actually joined.** A response of `{"error":0}` means
+   the request was accepted, not that Wi-Fi authentication succeeded. During
+   testing, an incorrect Wi-Fi password also returned success while the bulb
+   never joined. Reconnect your computer to the normal network and look for
+   the bulb in the router's DHCP leases. Do not proceed on the response alone.
+6. Reserve the bulb's normal LAN address in DHCP. Match the correct bulb in the
+   lease list; do not enter the factory setup address as its HA host.
+7. Record **name, normal LAN IP, device ID and device key** securely. In HA,
+   open **Settings → Devices & services → Add integration → eWeLink LAN
    Light (no cloud)** and enter a name, that LAN address, the device ID and key.
    Repeat separately for every bulb. HA must be able to reach the bulb's
    LAN endpoint on TCP port 8081; mDNS is used for pushed state updates.
+
+## What was actually tested
+
+The cloud-free `/ap` request with the `.invalid` server name was tested on **one
+bulb**. Two older bulbs were initially provisioned through the regular eWeLink
+app and associated with an account; their keys were also obtained from `/device`
+while in pairing mode. That does not establish that the cloud-free provisioning
+request was tested on those older bulbs. No personal bulb addresses or actual
+credential values are included here.
+
+Treat the device key as a password: it permits control of that bulb from a
+reachable LAN client. After a factory reset, read it again rather than assuming
+it stayed the same; key persistence across resets has not been verified.
 
 ## If retrieval or setup fails
 
@@ -79,6 +121,8 @@ mode. Other eWeLink, Tuya, LEDVANCE or Matter products may use different methods
 - **HA cannot connect:** check the normal LAN address, routing and TCP 8081.
   In this implementation a non-response can also mean a busy device or wrong
   key, so it does not conclusively distinguish authentication from connectivity.
+- **`/ap` returns success but no DHCP lease appears:** recheck the SSID, password
+  and 2.4 GHz network. Request acceptance is not proof of Wi-Fi connectivity.
 - **A reset/re-pair breaks a previous entry:** confirm whether the address or key
   changed, then update/reconfigure the affected entry using supported HA controls.
 
@@ -92,4 +136,7 @@ The [SonoffLAN maintainer's manual device-key instructions](https://github.com/A
 document the setup-network `/device` route and the mapping from `apikey` to
 `devicekey`. That supports the retrieval method; it is not a compatibility
 guarantee for every bulb. This repository's implementation has been exercised
-on BL602 CK0205PWM bulbs. Check your product manual before entering pairing mode.
+on BL602 CK0205PWM bulbs. The detailed `/ap` recipe and observations above come
+from the operator's test report; the referenced manual key-retrieval guide does
+not establish that provisioning recipe. Check your product manual before
+entering pairing mode.

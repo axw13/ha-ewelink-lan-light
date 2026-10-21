@@ -15,9 +15,11 @@ HA must reach the bulb's LAN HTTP endpoint and receive its mDNS announcements.
 ## Retrieve the bulb ID and key
 
 Follow [Retrieve a bulb's device ID, key and LAN address](docs/device-credentials.md).
-It covers AP pairing, the local `/device` endpoint, `deviceid`/`apikey` mapping,
-returning the bulb to normal Wi-Fi, finding its LAN address and entering the
-values in HA. Existing working entries do not need to be reset or paired again.
+It covers AP pairing, `/device` with the `Package-Name` header, `deviceid`/`apikey`
+mapping, and the tested local `/ap` provisioning request with a nonresolving
+cloud endpoint. It also explains DHCP verification (request success does not
+prove Wi-Fi joined), reservations and entering the values in HA. Existing
+working entries do not need to be reset or paired again.
 All credential examples are placeholders.
 
 ## Installation from this private repository
